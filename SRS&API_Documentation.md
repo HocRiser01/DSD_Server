@@ -41,8 +41,8 @@ QA Team - By developing testing procedures founded in the system requirements, t
 
 ### 2.3.1 Componet Diagram
 
-![](1.jpg)
-![](2.png)
+![](https://github.com/HocRiser01/DSD_Server/blob/main/public/images/1.jpg)
+![](https://github.com/HocRiser01/DSD_Server/blob/main/public/images/1.jpg)
 
 # 3. Module Interface Design
 
