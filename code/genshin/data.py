@@ -1,28 +1,47 @@
-from . import network
-from . import motion
+import network
+import motion
+import log
 
-import sys
-sys.path.append("..")
 import dbest as db
 import AI as ai
 
 import threading
+import time
 import http
+import json
+import numpy as np
 
-__dataCollectionThread: dict
-__dataCollectionFlag: dict
+dataCollectionThread = {}
+dataCollectionFlag = {}
+dataCollectionMutex = threading.Lock()
+
 
 def getData(jsonData: dict):
     tp = "GetDataResponse"
 
     id = jsonData.get("id")
 
-    try:
-        return db.GetMotionData(account)
-    except Exception as e:
-        return network.message(tp, str(e))
+    log.log("Try to get data [id: %s]." % (id))
 
-    return message(tp, "GetDataSucceed")
+    try:
+        labels, createTime, lastTime = db.GetMotionRecord(id)
+        motionArray = []
+        recordLen = len(labels)
+
+        for i in range(recordLen):
+            motionRecord = {
+                "typeOfMotion": labels[i],
+                "start time": createTime[i],
+                "duration": lastTime[i]
+            }
+
+            motionArray.append(motionRecord)
+
+        return motionArray
+
+    except Exception as e:
+        log.log("Failed to get data [error: %s]" % (str(e)))
+        return network.message(tp, str(e))
 
 
 def discardData(jsonData: dict):
@@ -31,93 +50,148 @@ def discardData(jsonData: dict):
     id = jsonData.get("id")
     startTime = jsonData.get("startTime")
 
+    log.log("Try to discard data [id: %s, startTime: %s]" % (id, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(startTime))))
+
     try:
         db.DeleteMotionRecord(id, startTime)
     except Exception as e:
+        log.log("Failed to discard data [error: %s]" % str(e))
         return network.message(tp, str(e))
 
     return network.message(tp, "DiscardDataSucceed")
 
+
 def changeLabel(jsonData: dict):
     tp = "ChangeLabelResponse"
 
-    account = jsonData.get("account")
+    id = jsonData.get("id")
     startTime = jsonData.get("startTime")
     label = jsonData.get("label")
 
+    log.log("Try to change label [id: %s, startTime: %s, label: %s]" % (id, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(startTime)), motion.label[label]))
+
     try:
-        db.ModifyMotionRecord(account, startTime, label)
+        db.ModifyMotionRecord(id, startTime, label)
     except Exception as e:
-        returnnetwork.message(tp, str(e))
+        log.log("Failed to change label [error: %s]" % (str(e)))
+        return network.message(tp, str(e))
 
     return network.message(tp, "ChangeLabelSucceed")
+
 
 def collectData(jsonData: dict):
     tp = "CollectDataResponse"
 
-    userID = jsonData.get("userID")
+    id = jsonData.get("id")
     label = jsonData.get("label")
 
     try:
-        ip, port = db.GetDeviceInfo(userID)
+        ip, port = db.GetDeviceInfo(id)
+        log.log("Try to start data collection [id: %s, label: %s, ip: %s, port: %d]" % (id, motion.label(label), ip, port))
     except Exception as e:
+        log.log("Failed to start data collection [error: %s]" % str(e))
         return network.message(tp, str(e))
 
-    mutex = threading.Lock()
-    mutex.acquire()
+    dataCollectionMutex.acquire()
 
-    if __dataCollectionThread.get(userID) != None:
-        __dataCollectionFlag[userID] = False
-        while __dataCollectionThread.get(userID).is_alive() == True:
+    if dataCollectionThread.get(id) != None:
+        dataCollectionFlag[id] = False
+        while dataCollectionThread.get(id).is_alive() == True:
             continue
 
-    __dataCollectionThread[userID] = threading.Thread(
-        target=__collect, args=(userID, label, ip, port))
-    __dataCollectionFlag[userID] = True
+    dataCollectionThread[id] = threading.Thread(
+        target=collect, args=(id, label, ip, port))
+    dataCollectionFlag[id] = True
 
-    mutex.release()
+    dataCollectionMutex.release()
 
-    return message(tp, "CollectDataSucceed")
+    dataCollectionThread[id].start()
+
+
+def collect(id: str, label: int, ip: str, port: int):
+    data = np.empty((0, 5, 55))
+    frame = np.arange(5*55).reshape(5, 55)
+    count = 0
+
+    jsonRequest = json.dumps({"type": "GetRealtimeData"})
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    while dataCollectionFlag[id] == True:
+        conn = http.client.HTTPConnection("%s:%d" % (ip, port))
+
+        try:
+            conn.request("POST", "/", jsonRequest, headers)
+            response = conn.getresponse()
+            body = response.read().decode()
+            jsonData = json.loads(body)
+        except Exception as e:
+            log.log("Get error from device [error: %s]. Continue collection." % (str(e)))
+            continue
+
+        if jsonData.get("type") == "GetRealtimeDataResponse":
+            frame[count] = motion.parseMotion(jsonData)
+            count += 1
+
+        if count == 5:
+            data = np.append(data, frame.reshape(1,5,55), axis=0)
+            count = 0
+
+        time.sleep(0.2)
+
+    try:
+        db.SaveMotionData(id, time.time(), label, data)
+    except Exception as e:
+        log.log("Failed to save motion data [error: %s]" % (str(e)))
+        return
+
 
 def collectDataStop(jsonData: dict):
     tp = "CollectDataStopResponse"
 
-    userID = jsonData.get("userID")
+    id = jsonData.get("id")
 
-    if __dataCollectionThread.get(userID) == None:
-        return network.message(tp, "collection hasn't started")
+    log.log("Try to stop collection [id: %s]" % (id))
 
-    mutex = threading.Lock()
-    mutex.acquire()
+    if dataCollectionThread.get(id) == None:
+        log.log("Failed to stop collection [error: CollectionNotStarted]")
+        return network.message(tp, "CollectionNotStarted")
 
-    __dataCollectionFlag[userID] = False
-    while __dataCollectionThread.get(userID).is_alive() == True:
+    # some error may cause the collection thread to be terminated
+    if dataCollectionThread[id].is_alive() == False:
+        log.log("Failed to stop collection [error: CollectionUnexpectedlyTerminated]")
+        return network.message(tp, "CollectionUnexpectedlyTerminated")
+
+    dataCollectionMutex.acquire()
+
+    dataCollectionFlag[id] = False
+    while dataCollectionThread[id].is_alive() == True:
         continue
 
-    __dataCollectionThread.pop(userID)
-    __dataCollectionFlag.pop(userID)
+    dataCollectionThread.pop(id)
+    dataCollectionFlag.pop(id)
 
-    mutex.release()
+    dataCollectionMutex.release()
 
-    return message(tp, "CollectDataStopSucceed")
+    return network.message(tp, "CollectDataStopSucceed")
+
 
 def getPrediction(jsonData: dict):
     tp = "GetPredictionResponse"
 
-    userID = jsonData.get("userID")
+    id = jsonData.get("id")
+
+    log.log("Try to get prediction [id: %s]" %  (id))
 
     try:
-        motionData = db.GetMotionData(userID)
+        ip, port = db.GetDeviceInfo(id)
     except Exception as e:
-        return str(e)
-
-    try:
-        ip, port = db.GetDeviceInfo(userID)
-    except Exception as e:
+        log.log("Failed to get prediction [error: %s]" % (str(e)))
         return network.message(tp, str(e))
 
     conn = http.client.HTTPConnection("%s:%d" % (ip, port))
-    request = json.dump({"type": "GetRealtimeData"})
+    request = json.dumps({"type": "GetRealtimeData"})
     headers = {
         "Content-Type": "application/json"
     }
@@ -128,9 +202,13 @@ def getPrediction(jsonData: dict):
         body = response.read().decode()
         jsonData = json.loads(body)
     except Exception as e:
-        network.message(tp, str(e))
+        log.log("Failed to get prediction [error: %s]" % (str(e)))
+        return network.message(tp, str(e))
 
-    result = ai.get_predict(parseMotion(jsonData))
+    if jsonData.get("type") == "GetRealtimeDataResponse":
+        result = ai.get_predict(motion.parseMotion(jsonData))
+    else:
+        return network.message(tp,"PredtionNetworkError")
 
     if result == -2:
         return network.message(tp, "PredictionDataInvalid")
@@ -139,45 +217,14 @@ def getPrediction(jsonData: dict):
     else:
         return network.message(tp, motion.label[result])
 
+
 def resetModel(jsonData: dict):
     tp = "ResetModelRespose"
 
-    userID=jsonData.get("userID")
+    id = jsonData.get("id")
 
-    ai.clear(userID)
+    log.log("Try to reset model [id: %s]" % (id))
 
-    return message(tp, "ResetModelSucceed")
+    ai.clear(id)
 
-def __collect(userID: str, label: int, ip: str, port: int):
-    data = np.array([])
-    frame = np.full((5, 55), 0)
-    count = 0
-
-    conn = http.client.HTTPConnection("%s:%d" % (ip, port))
-    request = json.dump({"type": "GetRealtimeData"})
-    headers = {
-        "Content-Type": "application/json"
-    }
-
-    while __dataCollectionFlag[userID] == True:
-        try:
-            conn.request("POST", "/", request, headers)
-            response = conn.getresponse()
-            body = response.read().decode()
-            jsonData = json.loads(body)
-        except:
-            continue
-
-        frame[count] = motion.parseMotion(jsonData)
-        count += 1
-
-        if count == 5:
-            data = np.append(data, frame.reshape(1, 5, 55))
-            count = 0
-
-        sleep(200)
-
-    try:
-        db.SaveMotionData(userID, time.time(), label, data)
-    except:
-        return
+    return network.message(tp, "ResetModelSucceed")

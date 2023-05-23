@@ -13,7 +13,7 @@ def UpdateUserInfo(user_id: str, birthday: str, phone_number: str, email: str):
     return
 
 def GetUserInfo(user_id: str):
-    return ["2002.01.01", "mihoyo", "mihoyo@qq.com"] # Birthday & Id & Email
+    return "2002.01.01", "mihoyo", "mihoyo@qq.com" # Birthday & Id & Email
 
 def GetMotionData(user_id: str):
     return np.array((1,5,56))
@@ -25,10 +25,10 @@ def DeleteMotionRecord(user_id: str, create_time: str):
     return
 
 def SaveMotionData(user_id: str,create_time: str,label: int, data):
-    return void
+    return
 
 def GetDeviceInfo(user_id: str):
-    return [str, int] # IP & Port
+    return str, int # IP & Port
 
 def BindDevice(user_id: str,IP: str,Port: str):
     return
@@ -37,7 +37,7 @@ def UnbindDevice(user_id: str):
     return
 
 def GetMotionRecord(user_id: str):
-    return [list[int], list[string] ,list[string]] # Label & Creation time & Last time
+    return [1,2], ['a','b'] ,['a','b'] # Label & Creation time & Last time
 
 def ModifyMotionRecord(user_id: str,create_time: str,label:int):
     return

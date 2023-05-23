@@ -1,5 +1,5 @@
 import os
-from .model_SVM import *
+from model_SVM import *
 import pickle
 import numpy as np
 

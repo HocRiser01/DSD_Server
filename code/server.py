@@ -1,52 +1,57 @@
-# This is a demo for CentralServer
+import sys
+sys.path.append(".")
+sys.path.append("./AI")
+sys.path.append("./dbest")
+sys.path.append("./genshin")
 
-import genshin
-import socket
-import threading
-import json
-import importlib
 import traceback
+import importlib
+import json
+import threading
+import socket
+import genshin
 
 HOST = 'localhost'
-PORT = 12345
+PORT = 11451
 MBUF = 1048576 * 10  # Max buffer size 10MB
 
 def parse(jsonData: dict):
-    # check type == dict
     if type(jsonData) is not dict:
         return {
             "type": "Error",
             "network.message": "RequestObjectIsNotJson"
         }
-    # calculate and get the response value
+
     if type(jsonData.get("type")) == str:
-        if jsonData.get("type") == "Login":
+        jsonType = jsonData.get("type")
+
+        if jsonType == "Login":
             return genshin.login(jsonData)
-        elif jsonData.get("type") == "Register":
+        elif jsonType == "Register":
             return genshin.register(jsonData)
-        elif jsonData.get("type") == "ChangeUserInfo":
+        elif jsonType == "ChangeUserInfo":
             return genshin.changeUserInfo(jsonData)
-        elif jsonData.get("Type") == "ConnectEquipment":
+        elif jsonType == "ConnectEquipment":
             return genshin.connectEquipment(jsonData)
-        elif jsonData.get("Type") == "DisconnectEquipment":
+        elif jsonType == "DisconnectEquipment":
             return genshin.disconnectEquipment(jsonData)
-        elif jsonData.get("type") == "GetData":
-            return genshin.genshin.getData(jsonData)
-        elif jsonData.get("type") == "DiscardData":
+        elif jsonType == "GetData":
+            return genshin.getData(jsonData)
+        elif jsonType == "DiscardData":
             return genshin.discardData(jsonData)
-        elif jsonData.get("type") == "ChangeLabel":
+        elif jsonType == "ChangeLabel":
             return genshin.changeLabel(jsonData)
-        elif jsonData.get("Type") == "CollectData":
+        elif jsonType == "CollectData":
             return genshin.collectData(jsonData)
-        elif jsonData.get("Type") == "CollectDataStop":
+        elif jsonType == "CollectDataStop":
             return genshin.collectDataStop(jsonData)
-        elif jsonData.get("Type") == "GetPrediction":
+        elif jsonType == "GetPrediction":
             return genshin.getPrediction(jsonData)
         else:
             return {
                 "type": "Error",
                 "network.message": "RequestTypeUnknown",
-                "details": str(jsonData.get("type"))
+                "details": str(jsonType)
             }
     else:
         return {
@@ -55,20 +60,18 @@ def parse(jsonData: dict):
         }
 
 
-
 def solve(bodydata: str):
-    # try to get json data
     try:
         jsonData = json.loads(bodydata)
     except:
         jsonData = None
-    # if can not get json data
+
     if jsonData is None:
         return {
             "type": "Error",
             "network.message": "PostDataIsNotJson"
         }
-    # form ans
+
     if type(jsonData) == dict and jsonData.get("type") == "Reload":
         try:
             importlib.reload(genshin)
@@ -86,7 +89,7 @@ def solve(bodydata: str):
         except:
             ans = None
             errorDetail = str(traceback.format_exc())
-    # return ans to the client
+
     if ans is not None:
         return ans
     else:
@@ -97,17 +100,14 @@ def solve(bodydata: str):
         }
 
 
-# calculate the return value
 def work(conn, addr):
     data = conn.recv(MBUF).decode()
-    # print(f"[.] debug get data = {data}")
-    # get body data
+
     try:
         bodydata = data.split("\r\n\r\n", 1)[1]
     except:
         bodydata = None
-    print(f"[.] debug get addr = {addr} data = {bodydata}")
-    # get response for the request
+
     if bodydata is not None:
         ans = solve(bodydata)
     else:
@@ -115,7 +115,7 @@ def work(conn, addr):
             "type": "Error",
             "network.message": "NoPostData"
         }
-    # parse data
+
     dataToSend = json.dumps(ans).encode()
     httpHeader = "HTTP/1.1 200 OK\r\n"
     httpHeader += "Content-Type: application/json\r\n"
