@@ -3,6 +3,7 @@ import log
 
 import dbest as db
 
+
 def login(jsonData: dict):
     tp = "LoginResponse"
 
@@ -12,7 +13,7 @@ def login(jsonData: dict):
     log.log("Try to login [id: %s]." % (id))
 
     try:
-        db.LoginUser(id, password)
+        db.Database().LoginUser(id, password)
     except Exception as e:
         log.log("Failed to login [id: %s]." % (id))
         return network.message(tp, str(e))
@@ -32,7 +33,7 @@ def register(jsonData: dict):
     log.log("Try to register [id: %s]." % (id))
 
     try:
-        db.AddUser(id, password, birthday, email, phoneNumber)
+        db.Database().AddUser(id, password, birthday, email, phoneNumber)
     except Exception as e:
         log.log("Failed to register [error: %s]." % (str(e)))
         return network.message(tp, str(e))
@@ -51,7 +52,7 @@ def changeUserInfo(jsonData: dict):
     log.log("Try to change user info [id: %s]" % (id))
 
     try:
-        db.UpdateUserInfo(id, birthday, phoneNumber, email)
+        db.Database().UpdateUserInfo(id, birthday, phoneNumber, email)
     except Exception as e:
         log.log("Failed to change user info [error: %s]" % (str(e)))
         return network.message(tp, str(e))

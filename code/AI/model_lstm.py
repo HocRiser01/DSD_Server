@@ -17,7 +17,10 @@ class LSTM(nn.Module):
         # self.soft = nn.softmax(dim=2)
 
     def forward(self, x):
+        # print(x.shape)
+        # exit(0)
         lstm_out, _ = self.lstm(x)
+
         # print(lstm_out.shape)
         # print(_.shape)
         out = self.fc(lstm_out)

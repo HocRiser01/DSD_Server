@@ -24,7 +24,7 @@ def getData(jsonData: dict):
     log.log("Try to get data [id: %s]." % (id))
 
     try:
-        labels, createTime, lastTime = db.GetMotionRecord(id)
+        labels, createTime, lastTime = db.Database().GetMotionRecord(id)
         motionArray = []
         recordLen = len(labels)
 
@@ -50,10 +50,11 @@ def discardData(jsonData: dict):
     id = jsonData.get("id")
     startTime = jsonData.get("startTime")
 
-    log.log("Try to discard data [id: %s, startTime: %s]" % (id, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(startTime))))
+    log.log("Try to discard data [id: %s, startTime: %s]" % (
+        id, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(startTime))))
 
     try:
-        db.DeleteMotionRecord(id, startTime)
+        db.Database().DeleteMotionRecord(id, startTime)
     except Exception as e:
         log.log("Failed to discard data [error: %s]" % str(e))
         return network.message(tp, str(e))
@@ -68,10 +69,11 @@ def changeLabel(jsonData: dict):
     startTime = jsonData.get("startTime")
     label = jsonData.get("label")
 
-    log.log("Try to change label [id: %s, startTime: %s, label: %s]" % (id, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(startTime)), motion.label[label]))
+    log.log("Try to change label [id: %s, startTime: %s, label: %s]" % (
+        id, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(startTime)), motion.label[label]))
 
     try:
-        db.ModifyMotionRecord(id, startTime, label)
+        db.Database().ModifyMotionRecord(id, startTime, label)
     except Exception as e:
         log.log("Failed to change label [error: %s]" % (str(e)))
         return network.message(tp, str(e))
@@ -86,8 +88,9 @@ def collectData(jsonData: dict):
     label = jsonData.get("label")
 
     try:
-        ip, port = db.GetDeviceInfo(id)
-        log.log("Try to start data collection [id: %s, label: %s, ip: %s, port: %d]" % (id, motion.label(label), ip, port))
+        ip, port = db.Database().GetDeviceInfo(id)
+        log.log("Try to start data collection [id: %s, label: %s, ip: %s, port: %d]" % (
+            id, motion.label[label], ip, port))
     except Exception as e:
         log.log("Failed to start data collection [error: %s]" % str(e))
         return network.message(tp, str(e))
@@ -127,7 +130,8 @@ def collect(id: str, label: int, ip: str, port: int):
             body = response.read().decode()
             jsonData = json.loads(body)
         except Exception as e:
-            log.log("Get error from device [error: %s]. Continue collection." % (str(e)))
+            log.log(
+                "Get error from device [error: %s]. Continue collection." % (str(e)))
             continue
 
         if jsonData.get("type") == "GetRealtimeDataResponse":
@@ -135,13 +139,13 @@ def collect(id: str, label: int, ip: str, port: int):
             count += 1
 
         if count == 5:
-            data = np.append(data, frame.reshape(1,5,55), axis=0)
+            data = np.append(data, frame.reshape(1, 5, 55), axis=0)
             count = 0
 
         time.sleep(0.2)
 
     try:
-        db.SaveMotionData(id, time.time(), label, data)
+        db.Database().SaveMotionData(id, time.time(), label, data)
     except Exception as e:
         log.log("Failed to save motion data [error: %s]" % (str(e)))
         return
@@ -160,7 +164,8 @@ def collectDataStop(jsonData: dict):
 
     # some error may cause the collection thread to be terminated
     if dataCollectionThread[id].is_alive() == False:
-        log.log("Failed to stop collection [error: CollectionUnexpectedlyTerminated]")
+        log.log(
+            "Failed to stop collection [error: CollectionUnexpectedlyTerminated]")
         return network.message(tp, "CollectionUnexpectedlyTerminated")
 
     dataCollectionMutex.acquire()
@@ -182,10 +187,10 @@ def getPrediction(jsonData: dict):
 
     id = jsonData.get("id")
 
-    log.log("Try to get prediction [id: %s]" %  (id))
+    log.log("Try to get prediction [id: %s]" % (id))
 
     try:
-        ip, port = db.GetDeviceInfo(id)
+        ip, port = db.Database().GetDeviceInfo(id)
     except Exception as e:
         log.log("Failed to get prediction [error: %s]" % (str(e)))
         return network.message(tp, str(e))
@@ -208,7 +213,7 @@ def getPrediction(jsonData: dict):
     if jsonData.get("type") == "GetRealtimeDataResponse":
         result = ai.get_predict(motion.parseMotion(jsonData))
     else:
-        return network.message(tp,"PredtionNetworkError")
+        return network.message(tp, "PredtionNetworkError")
 
     if result == -2:
         return network.message(tp, "PredictionDataInvalid")

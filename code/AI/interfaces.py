@@ -1,9 +1,9 @@
 import os
-from model_SVM import *
+from model_KNN import *
 import pickle
 import numpy as np
 
-gen = 'SVM'
+gen = 'KNN'
 #[KNN,SVM,lstm]
 record=["down","left","right","sit","stand","up","walk"]
 

@@ -17,6 +17,7 @@ def get_sorce(model,X,y):
     acc = np.sum(pred.equal(y))
     return 1.0*acc/y.shape[0]
 
+from sklearn.metrics import classification_report
 def Train(X_train,X_test,y_train,y_test):
     X_train =X_train.reshape(-1,54)
     X_test  =X_test.reshape(-1,54)
@@ -25,6 +26,7 @@ def Train(X_train,X_test,y_train,y_test):
     KNN = KNeighborsClassifier(n_neighbors=6, p=2.5)
     KNN.fit(X_train,y_train)
     acc = KNN.score(X_test,y_test)
+    print(classification_report(y_test, KNN.predict(X_test)))
     return (KNN,acc)
 
 if __name__ == '__main__':

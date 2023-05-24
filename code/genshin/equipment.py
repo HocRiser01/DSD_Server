@@ -15,10 +15,10 @@ def connectEquipment(jsonData: dict):
     ip = jsonData.get("ip")
     port = jsonData.get("port")
 
-    log.log("Try to bind device [id: %s, ip: %s, port: %d]." % (id,ip,port))
+    log.log("Try to bind device [id: %s, ip: %s, port: %d]." % (id, ip, port))
 
     try:
-        db.BindDevice(id, ip, port)
+        db.Database().BindDevice(id, ip, port)
     except Exception as e:
         log.log("Failed to bind device [error: %s]." % (str(e)))
         return network.message(tp, str(e))
@@ -34,22 +34,23 @@ def disconnectEquipment(jsonData: dict):
     log.log("Try to unbind device [id: %s]." % (id))
 
     try:
-        db.UnbindDevice(id)
+        db.Database().UnbindDevice(id)
     except Exception as e:
         log.log("Failed to unbind device [error: %s]" % (str(e)))
         return network.message(tp, str(e))
 
     return network.message(tp, "DisconnectEquipmentResponse")
 
+
 def getSensorDetails(jsonData: dict):
     tp = "GetSensorDetailsResponse"
 
     id = jsonData.get("id")
 
-    log.log("Try to get sensor details [id: %s]" %  (id))
+    log.log("Try to get sensor details [id: %s]" % (id))
 
     try:
-        ip, port = db.GetDeviceInfo(id)
+        ip, port = db.Database().GetDeviceInfo(id)
     except Exception as e:
         log.log("Failed to get sensor details [error: %s]" % (str(e)))
         return network.message(tp, str(e))
