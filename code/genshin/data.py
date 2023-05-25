@@ -8,6 +8,7 @@ import AI as ai
 import threading
 import time
 import http
+import http.client
 import json
 import numpy as np
 
@@ -87,10 +88,12 @@ def collectData(jsonData: dict):
     id = jsonData.get("id")
     label = jsonData.get("label")
 
+    log.log("Try to start data collection [id: %s, label: %s]" % (
+            id, motion.label[label]))
+
     try:
         ip, port = db.Database().GetDeviceInfo(id)
-        log.log("Try to start data collection [id: %s, label: %s, ip: %s, port: %s]" % (
-            id, motion.label[label], ip, port))
+        log.log("[ip: %s, port: %s]" % (ip, port))
     except Exception as e:
         log.log("Failed to start data collection [error: %s]" % str(e))
         return network.message(tp, str(e))
@@ -124,7 +127,7 @@ def collect(id: str, label: int, ip: str, port: int):
     }
 
     while dataCollectionFlag[id] == True:
-        conn = http.client.HTTPConnection("%s:%d" % (ip, port))
+        conn = http.client.HTTPConnection("%s:%s" % (ip, port))
 
         try:
             conn.request("POST", "/", jsonRequest, headers)

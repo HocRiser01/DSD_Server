@@ -52,6 +52,7 @@ def getSensorDetails(jsonData: dict):
 
     try:
         ip, port = db.Database().GetDeviceInfo(id)
+        log.log("[ip: %s, port: %s]" % (ip, port))
     except Exception as e:
         log.log("Failed to get sensor details [error: %s]" % (str(e)))
         return network.message(tp, str(e))
@@ -85,11 +86,12 @@ def getSensorStatus(jsonData: dict):
 
     try:
         ip, port = db.Database().GetDeviceInfo(id)
+        log.log("[ip: %s, port: %s]" % (ip, port))
     except Exception as e:
         log.log("Failed to get sensor status [error: %s]" % (str(e)))
         return network.message(tp, str(e))
 
-    conn = http.client.HTTPConnection("%s:%s" % (ip, port))
+    conn = http.client.HTTPConnection("%s:%d" % (ip, port))
     request = json.dumps({"type": "GetSensorStatus"})
     headers = {
         "Content-Type": "application/json"
