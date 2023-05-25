@@ -68,7 +68,7 @@ def getUserInfo(jsonData: dict):
 
     try:
         birthday, phoneNumber, email, user_type = db.Database().GetUserInfo(id)
-    except:
+    except Exception as e:
         log.log("Failed to get user info [error: %s]" % (str(e)))
         return network.message(tp, str(e))
 

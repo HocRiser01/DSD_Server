@@ -1,5 +1,5 @@
-import network
 import motion
+import network
 import log
 
 import dbest as db
@@ -10,7 +10,6 @@ import time
 import http
 import http.client
 import json
-import numpy as np
 
 dataCollectionThread = {}
 dataCollectionFlag = {}
@@ -117,9 +116,7 @@ def collectData(jsonData: dict):
 
 
 def collect(id: str, label: int, ip: str, port: int):
-    data = np.empty((0, 5, 55))
-    frame = np.arange(5*55).reshape(5, 55)
-    count = 0
+    data = []
 
     jsonRequest = json.dumps({"type": "GetRealtimeData"})
     headers = {
@@ -134,24 +131,17 @@ def collect(id: str, label: int, ip: str, port: int):
             response = conn.getresponse()
             body = response.read().decode()
             jsonData = json.loads(body)
-            print(jsonData)
         except Exception as e:
             log.log(
                 "Get error from device [error: %s]. Continue collection." % (str(e)))
             continue
 
         if jsonData.get("type") == "GetRealtimeDataResponse":
-            frame[count] = motion.parseMotion(jsonData)
-            count += 1
-
-        if count == 5:
-            data = np.append(data, frame.reshape(1, 5, 55), axis=0)
-            count = 0
+            data.append(jsonData)
 
         time.sleep(0.2)
 
     try:
-        log.log("Shape of data to be saved: (%d, %d, %d).", data.shape[0], data.shape[1], data.shape[2])
         db.Database().SaveMotionData(id, time.time(), label, data)
     except Exception as e:
         log.log("Failed to save motion data [error: %s]" % (str(e)))
