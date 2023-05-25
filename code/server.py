@@ -11,7 +11,7 @@ import threading
 import socket
 import genshin
 
-HOST = 'localhost'
+HOST = "0.0.0.0"
 PORT = 11451
 MBUF = 1048576 * 10  # Max buffer size 10MB
 
