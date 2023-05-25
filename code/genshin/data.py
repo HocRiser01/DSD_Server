@@ -110,6 +110,8 @@ def collectData(jsonData: dict):
 
     dataCollectionThread[id].start()
 
+    return network.message(tp, "CollectDataStarted")
+
 
 def collect(id: str, label: int, ip: str, port: int):
     data = np.empty((0, 5, 55))
@@ -180,7 +182,7 @@ def collectDataStop(jsonData: dict):
 
     dataCollectionMutex.release()
 
-    return network.message(tp, "CollectDataStopSucceed")
+    return network.message(tp, "CollectDataStopped")
 
 
 def getPrediction(jsonData: dict):
