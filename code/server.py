@@ -47,6 +47,10 @@ def parse(jsonData: dict):
             return genshin.collectDataStop(jsonData)
         elif jsonType == "GetPrediction":
             return genshin.getPrediction(jsonData)
+        elif jsonType == "GetSensorDetails":
+            return genshin.getSensorDetails(jsonData)
+        elif jsonType == "GetSensorStatus":
+            return genshin.getSensorStatus(jsonData)
         else:
             return {
                 "type": "Error",

@@ -5,6 +5,7 @@ import dbest as db
 import AI as ai
 
 import http
+import http.client
 import json
 
 
@@ -55,7 +56,7 @@ def getSensorDetails(jsonData: dict):
         log.log("Failed to get sensor details [error: %s]" % (str(e)))
         return network.message(tp, str(e))
 
-    conn = http.client.HTTPConnection("%s:%d" % (ip, port))
+    conn = http.client.HTTPConnection("%s:%s" % (ip, port))
     request = json.dumps({"type": "GetSensorDetails"})
     headers = {
         "Content-Type": "application/json"
@@ -74,3 +75,36 @@ def getSensorDetails(jsonData: dict):
         return jsonData
     else:
         return network.message(tp, "SensorDetailsNetworkError")
+
+def getSensorStatus(jsonData: dict):
+    tp = "GetSensorStatusResponse"
+
+    id = jsonData.get("id")
+
+    log.log("Try to get sensor status [id: %s]" % (id))
+
+    try:
+        ip, port = db.Database().GetDeviceInfo(id)
+    except Exception as e:
+        log.log("Failed to get sensor status [error: %s]" % (str(e)))
+        return network.message(tp, str(e))
+
+    conn = http.client.HTTPConnection("%s:%s" % (ip, port))
+    request = json.dumps({"type": "GetSensorStatus"})
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    try:
+        conn.request("POST", "/", request, headers)
+        response = conn.getresponse()
+        body = response.read().decode()
+        jsonData = json.loads(body)
+    except Exception as e:
+        log.log("Failed to get sensor status [error: %s]" % (str(e)))
+        return network.message(tp, str(e))
+
+    if jsonData.get("type") == "GetSensorStatusResponse":
+        return jsonData
+    else:
+        return network.message(tp, "SensorStatusNetworkError")

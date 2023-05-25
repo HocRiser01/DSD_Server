@@ -88,9 +88,8 @@ def collectData(jsonData: dict):
     label = jsonData.get("label")
 
     try:
-        #ip, port = db.Database().GetDeviceInfo(id)
-        ip, port = "139.155.89.85", 40096
-        log.log("Try to start data collection [id: %s, label: %s, ip: %s, port: %d]" % (
+        ip, port = db.Database().GetDeviceInfo(id)
+        log.log("Try to start data collection [id: %s, label: %s, ip: %s, port: %s]" % (
             id, motion.label[label], ip, port))
     except Exception as e:
         log.log("Failed to start data collection [error: %s]" % str(e))
