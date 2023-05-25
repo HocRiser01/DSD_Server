@@ -58,3 +58,23 @@ def changeUserInfo(jsonData: dict):
         return network.message(tp, str(e))
 
     return network.message(tp, "ChangeUserInfoSucceed")
+    
+def getUserInfo(jsonData: dict):
+    tp = "GetUserInfoResponse"
+    
+    id=jsonData.get("id")
+    
+    log.log("Try to get user info [id: %s]" % (id))
+
+    try:
+        birthday, phoneNumber, email, user_type = db.Database().GetUserInfo(id)
+    except:
+        log.log("Failed to get user info [error: %s]" % (str(e)))
+        return network.message(tp, str(e))
+
+    return {
+        "birthday": birthday,
+        "phoneNumber": phoneNumber,
+        "email": email
+    }
+        

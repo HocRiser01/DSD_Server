@@ -31,10 +31,16 @@ def parse(jsonData: dict):
             return genshin.register(jsonData)
         elif jsonType == "ChangeUserInfo":
             return genshin.changeUserInfo(jsonData)
+        elif jsonType == "GetUserInfo":
+            return genshin.getUserInfo(jsonData)
         elif jsonType == "ConnectEquipment":
             return genshin.connectEquipment(jsonData)
         elif jsonType == "DisconnectEquipment":
             return genshin.disconnectEquipment(jsonData)
+        elif jsonType == "GetSensorDetails":
+            return genshin.getSensorDetails(jsonData)
+        elif jsonType == "GetSensorStatus":
+            return genshin.getSensorStatus(jsonData)
         elif jsonType == "GetData":
             return genshin.getData(jsonData)
         elif jsonType == "DiscardData":
@@ -47,10 +53,6 @@ def parse(jsonData: dict):
             return genshin.collectDataStop(jsonData)
         elif jsonType == "GetPrediction":
             return genshin.getPrediction(jsonData)
-        elif jsonType == "GetSensorDetails":
-            return genshin.getSensorDetails(jsonData)
-        elif jsonType == "GetSensorStatus":
-            return genshin.getSensorStatus(jsonData)
         else:
             return {
                 "type": "Error",
