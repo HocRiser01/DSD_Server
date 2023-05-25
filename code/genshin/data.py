@@ -151,6 +151,7 @@ def collect(id: str, label: int, ip: str, port: int):
         time.sleep(0.2)
 
     try:
+        log.log("Shape of data to be saved: (%d, %d, %d).", data.shape[0], data.shape[1], data.shape[2])
         db.Database().SaveMotionData(id, time.time(), label, data)
     except Exception as e:
         log.log("Failed to save motion data [error: %s]" % (str(e)))
