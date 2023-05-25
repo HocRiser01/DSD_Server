@@ -469,7 +469,7 @@ class Database():
             lower_bound = res[0]['timestamp']
             upper_bound = res[num - 1]['timestamp']
 
-            sql = """ INSERT INTO "MotionRecord"(user_id,created_time,label,lower_bound,upper_bound) VALUES (%s,%s,%s,%s,%s)"""
+            sql = """ INSERT INTO "MotionRecord"(user_id,create_time,label,lower_bound,upper_bound) VALUES (%s,%s,%s,%s,%s)"""
             params = (user_id, create_time, label, lower_bound, upper_bound,)
             cursor.execute(sql, params)
 
