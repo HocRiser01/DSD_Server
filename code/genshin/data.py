@@ -88,7 +88,8 @@ def collectData(jsonData: dict):
     label = jsonData.get("label")
 
     try:
-        ip, port = db.Database().GetDeviceInfo(id)
+        #ip, port = db.Database().GetDeviceInfo(id)
+        ip, port = "139.155.89.85", 40096
         log.log("Try to start data collection [id: %s, label: %s, ip: %s, port: %d]" % (
             id, motion.label[label], ip, port))
     except Exception as e:
@@ -129,6 +130,7 @@ def collect(id: str, label: int, ip: str, port: int):
             response = conn.getresponse()
             body = response.read().decode()
             jsonData = json.loads(body)
+            print(jsonData)
         except Exception as e:
             log.log(
                 "Get error from device [error: %s]. Continue collection." % (str(e)))

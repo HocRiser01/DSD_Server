@@ -123,15 +123,15 @@ def work(conn, addr):
     mergedData = (httpHeader + "\r\n\r\n").encode() + dataToSend
     conn.sendall(mergedData)
     conn.close()
-    print(f"[-] closing {addr}")
+    genshin.log(f"Closing {addr}.")
 
 if __name__ == "__main__":
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind((HOST, PORT))
     sock.listen()
-    print(f"[.] listening {HOST}:{PORT}")
+    genshin.log(f"Listening {HOST}:{PORT}.")
     while True:
         conn, addr = sock.accept()
-        print(f"[+] connected by {addr}")
+        genshin.log(f"Connected by {addr}.")
         t = threading.Thread(target=work, args=(conn, addr))
         t.start()
