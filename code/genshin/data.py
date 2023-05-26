@@ -192,7 +192,7 @@ def getPrediction(jsonData: dict):
         log.log("Failed to get prediction [error: %s]" % (str(e)))
         return network.message(tp, str(e))
 
-    conn = http.client.HTTPConnection("%s:%d" % (ip, port))
+    conn = http.client.HTTPConnection("%s:%s" % (ip, port))
     request = json.dumps({"type": "GetRealtimeData"})
     headers = {
         "Content-Type": "application/json"

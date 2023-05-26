@@ -73,7 +73,7 @@ def getUserInfo(jsonData: dict):
         return network.message(tp, str(e))
 
     return {
-        "birthday": birthday,
+        "birthday": str(birthday),
         "phoneNumber": phoneNumber,
         "email": email
     }
