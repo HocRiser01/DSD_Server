@@ -19,6 +19,8 @@ def train(id: str):
         acc, logPath = ai.get_train(id, data)
     except Exception as e:
         genshin.log("Failed to train model [error: %s]." % (str(e)))
+        return
+    
     genshin.log("Training finished [id: %s, accuarcy: %f, log path: %s]." % (id, acc, logPath))
 
 
