@@ -138,12 +138,10 @@ def collect(id: str, label: int, ip: str, port: int):
 
         if jsonData.get("type") == "GetRealtimeDataResponse":
             data.append(jsonData)
-            print(jsonData)
 
         time.sleep(0.2)
 
     try:
-        print(len(data))
         db.Database().SaveMotionData(id, time.time(), label, data)
     except Exception as e:
         log.log("Failed to save motion data [error: %s]" % (str(e)))
