@@ -9,3 +9,4 @@ data/*
 !data/data.pth
 model_lib/usr/*
 !model_lib/usr/usr.pth
+nohup.out
