@@ -468,7 +468,7 @@ class Database():
             num = len(res)
 
             init=res[0]['timestamp']
-
+            
             temp=np.zeros((num,55))
 
             for i in range(num):

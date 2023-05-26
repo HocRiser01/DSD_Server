@@ -138,10 +138,12 @@ def collect(id: str, label: int, ip: str, port: int):
 
         if jsonData.get("type") == "GetRealtimeDataResponse":
             data.append(jsonData)
+            print(jsonData)
 
         time.sleep(0.2)
 
     try:
+        print(len(data))
         db.Database().SaveMotionData(id, time.time(), label, data)
     except Exception as e:
         log.log("Failed to save motion data [error: %s]" % (str(e)))
@@ -208,7 +210,7 @@ def getPrediction(jsonData: dict):
         return network.message(tp, str(e))
 
     if jsonData.get("type") == "GetRealtimeDataResponse":
-        result = ai.get_predict(motion.parseMotion(jsonData))
+        result = ai.get_predict(id, motion.parseMotion(jsonData).reshape(1, 55))
     else:
         return network.message(tp, "PredtionNetworkError")
 
@@ -217,7 +219,7 @@ def getPrediction(jsonData: dict):
     elif result == -1:
         return network.message(tp, "PredictionModelMissing")
     else:
-        return network.message(tp, motion.label[result])
+        return network.message(tp, result)
 
 
 def resetModel(jsonData: dict):
