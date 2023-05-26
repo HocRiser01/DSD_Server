@@ -9,9 +9,17 @@ import dbest as db
 import AI as ai
 import genshin
 
-
 def train(id: str):
     data = db.Database().GetMotionData(id)
+    
+    try: 
+        if data.shape[0] == 0:
+            genshin.log("No data collected for %s. Skip." % id)
+            return
+    except:
+        genshin.log("No data collected for %s. Skip." % id)
+        return
+
     train_time = ai.get_train_time(data)
     genshin.log(
         "Start to train model of %s [expected training time: %d sec]." % (id, train_time))
@@ -26,7 +34,7 @@ def train(id: str):
 
 if __name__ == "__main__":
     users = db.Database().GetallUser()
-
+    
     for user in users:
         train_thread = threading.Thread(target=train, args=(user))
         train_thread.start()

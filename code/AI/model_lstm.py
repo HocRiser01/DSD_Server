@@ -19,6 +19,7 @@ class LSTM(nn.Module):
     def forward(self, x):
         # print(x.shape)
         # exit(0)
+        self.lstm.flatten_parameters()
         lstm_out, _ = self.lstm(x)
 
         # print(lstm_out.shape)
@@ -46,7 +47,7 @@ class FHBDataset(Dataset):
 BATCH_SIZE = 32
 EPOCH = 100
 
-
+from sklearn.metrics import classification_report
 def Train(X_train,X_test,y_train,y_test):
     X_train = X_train.reshape(-1, 54)
     X_test = X_test.reshape(-1, 54)
@@ -64,41 +65,61 @@ def Train(X_train,X_test,y_train,y_test):
     acc = 0
     for epoch in range(EPOCH):
         for step, (b_x, b_y) in enumerate(train_loader):
+            b_x = b_x.reshape(-1,1,54)
             if (cuda_gpu):
                 b_x = b_x.cuda()
                 b_y = b_y.cuda()
             output = lstm(b_x.float())
-            # output = output.reshape(output.shape[0],output.shape[2])
+            # print(output.shape)
+            output = output.reshape(output.shape[0],output.shape[2])
             loss = F.cross_entropy(output.float(), b_y.long())
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
         corrects = 0
         for _, (b_x, b_y) in enumerate(test_loader):
+            b_x = b_x.reshape(-1, 1, 54)
             if (cuda_gpu):
                 b_x = b_x.cuda()
                 b_y = b_y.cuda()
             output = lstm(b_x.float())
+            output = output.reshape(output.shape[0], output.shape[2])
             corrects += (torch.max(output, 1)
                         [1].view(b_y.size()).data == b_y.data).sum()
         size = len(Testdata)
         accuracy = 100.0 * corrects / size
         acc = accuracy
         print('Epoch: {:2d}Evaluation - acc: {:3.4f}'.format(epoch,acc))
+    y1_pred = []
+    y1_real = []
+    for _, (b_x, b_y) in enumerate(test_loader):
+        b_x = b_x.reshape(-1, 1, 54)
+        if (cuda_gpu):
+            b_x = b_x.cuda()
+            b_y = b_y.cuda()
+        output = lstm(b_x.float())
+        output = output.reshape(output.shape[0], output.shape[2])
+        y1_real.extend(b_y.tolist())
+        y1_pred.extend(torch.max(output, 1)[1].view(b_y.size()).tolist())
+        corrects += (torch.max(output, 1)
+                     [1].view(b_y.size()).data == b_y.data).sum()
+    print(classification_report(y1_real,y1_pred))
     return (lstm,acc)
 
 
 def predict_proba(model,data):
     Data = torch.Tensor(data)
-    Data = Data.reshape(1,Data.shape[0])
+    Data = Data.reshape(1, 1 ,Data.shape[0])
     output = model(Data)
+    output = output.reshape(output.shape[0], output.shape[2])
     return F.softmax(output,dim=-1).clone().cpu().detach().numpy()
 
 
 def predict(model,data):
     Data = torch.Tensor(data)
-    Data = Data.reshape(1, Data.shape[0])
+    Data = Data.reshape(1, 1,Data.shape[0])
     output = model(Data)
+    output = output.reshape(output.shape[0], output.shape[2])
     return F.softmax(output, dim=-1).max()[1]
 
 
@@ -109,6 +130,7 @@ def get_sorce(model,X,y):
     test_loader = DataLoader(Testdata, batch_size=BATCH_SIZE)
     corrects = 0
     for _, (b_x, b_y) in enumerate(test_loader):
+        b_x = b_x.reshape(-1, 1, 54)
         output = model(b_x.float())
         output = output.reshape(output.shape[0], output.shape[2])
         corrects += (torch.max(output, 1)

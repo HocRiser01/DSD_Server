@@ -2,3 +2,10 @@
 log.txt
 **/__pycache__
 test.py
+2023-04-24 DATA/
+log/*
+!log/log.log
+data/*
+!data/data.pth
+model_lib/usr/*
+!model_lib/usr/usr.pth
