@@ -91,7 +91,7 @@ def getSensorStatus(jsonData: dict):
         log.log("Failed to get sensor status [error: %s]" % (str(e)))
         return network.message(tp, str(e))
 
-    conn = http.client.HTTPConnection("%s:%d" % (ip, port))
+    conn = http.client.HTTPConnection("%s:%s" % (ip, port))
     request = json.dumps({"type": "GetSensorStatus"})
     headers = {
         "Content-Type": "application/json"
