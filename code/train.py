@@ -23,7 +23,7 @@ def train(id: str):
 
 
 if __name__ == "__main__":
-    users = db.Database().GetAllUser()
+    users = db.Database().GetallUser()
 
     for user in users:
         train_thread = threading.Thread(target=train, args=(user))
