@@ -97,6 +97,7 @@ def collectData(jsonData: dict):
         log.log("Failed to start data collection [error: %s]" % str(e))
         return network.message(tp, str(e))
 
+    '''
     dataCollectionMutex.acquire()
 
     if dataCollectionThread.get(id) != None:
@@ -111,7 +112,9 @@ def collectData(jsonData: dict):
     dataCollectionMutex.release()
 
     dataCollectionThread[id].start()
-
+    '''
+    dataCollectionFlag[id]=True
+    collect(id, label, ip, port)
     return network.message(tp, "CollectDataStarted")
 
 
@@ -138,6 +141,7 @@ def collect(id: str, label: int, ip: str, port: int):
 
         if jsonData.get("type") == "GetRealtimeDataResponse":
             data.append(jsonData)
+            print(jsonData)
 
         time.sleep(0.2)
 
