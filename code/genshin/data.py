@@ -30,9 +30,9 @@ def getData(jsonData: dict):
 
         for i in range(recordLen):
             motionRecord = {
-                "typeOfMotion": labels[i],
-                "start time": createTime[i],
-                "duration": lastTime[i]
+                "typeOfMotion": str(labels[i]),
+                "start time": str(createTime[i]),
+                "duration": str(lastTime[i])
             }
 
             motionArray.append(motionRecord)
