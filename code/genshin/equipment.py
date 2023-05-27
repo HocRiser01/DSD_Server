@@ -40,7 +40,7 @@ def disconnectEquipment(jsonData: dict):
         log.log("Failed to unbind device [error: %s]" % (str(e)))
         return network.message(tp, str(e))
 
-    return network.message(tp, "DisconnectEquipmentResponse")
+    return network.message(tp, "DisconnectEquipmentSucceed")
 
 
 def getSensorDetails(jsonData: dict):

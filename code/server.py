@@ -53,6 +53,8 @@ def parse(jsonData: dict):
             return genshin.collectDataStop(jsonData)
         elif jsonType == "GetPrediction":
             return genshin.getPrediction(jsonData)
+        elif jsonType == "ResetModel":
+            return genshin.resetModel(jsonData)
         else:
             return {
                 "type": "Error",
