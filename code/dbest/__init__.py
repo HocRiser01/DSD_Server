@@ -636,7 +636,7 @@ class Database():
             if(vis[i]==0): emp.append(i)
         cnt=0
         for i in range(k, 5):
-            res[i][54] = emp[cnt]*0.2
+            res[i][54] = emp[cnt]*0.2 + data[0][54]
             cnt=cnt+1
         if (k == 3):
             x0 = data[0][54]
@@ -675,7 +675,7 @@ class Database():
                                                                            x3 - x0) * (x3 - x1) * (x3 - x2)) * y3
                 res[4][i] = y4
 
-            return res
+        return res
 
     def GetUserLog(self,user_id):
         try:
